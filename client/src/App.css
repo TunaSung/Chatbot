@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* ------------------- *\
+Globel;
+\* ------------------- */
+@layer base{
+    *{
+        @apply relative box-border
+    }
+    h1,h2,h3,h4,h5,h6,p,ul {
+      @apply m-0
+    }
+    ul {
+      @apply p-0
+    }
+    button{
+        @apply cursor-pointer
+    }
+    body{
+        @apply font-['Arial']
+    }
+}
+
+.container-mid {
+    @apply w-[98%] md:w-[90%] lg:w-[80%] xl:w-[75%] 2xl:w-[65%] mx-auto px-4 sm:px-6 lg:px-8
+}
+
+@layer utilities {
+    .gap-rwd {
+        gap: clamp(24px, 3vw, 32px);
+    }
+}

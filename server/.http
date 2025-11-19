@@ -1,0 +1,84 @@
+# 註冊 / 登入 ---------------------------------------------------
+###
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "Ryan",
+    "email": "1231321@gmail.com",
+    "password": "123123"
+}
+
+###
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "email": "1231321@gmail.com",
+    "password": "123123"
+}
+
+# 聊天機器人 ----------------------------------------------------
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+    "message": "給我10個類似「我一怒之下，就怒了一下」之類的屁話"
+}
+
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+    "message": "關於中美亂加關稅你怎麼看"
+}
+
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+    "conversationId": 3,
+    "message": "幫我列出三個重點"
+}
+
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+    "conversationId": 3,
+    "message": "幫我列出這三個重點的三個重點"
+}
+
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+    "conversationId": 4,
+    "message": "給我有點變化的"
+}
+
+###
+GET http://localhost:8080/api/chat/conversations
+Content-Type: application/json
+
+###
+GET http://localhost:8080/api/chat/conversations/2/messages
+Content-Type: application/json
+
+###
+DELETE  http://localhost:8080/api/chat/conversations/4/delete
+Content-Type: application/json
+
+###
+POST http://localhost:8080/api/chat/conversations/update
+Content-Type: application/json
+
+{
+    "conversationId": 5,
+    "title": "袁世凱竊取革命果實是不是你幹的"
+}
