@@ -43,9 +43,10 @@
 
 **Backend**
 
-- Node.js + Express + TypeScript
+- Node.js(Express) + TypeScript
 - Sequelize + MySQL
 - Zod 驗證（params / body）
+- AI：OpenAI Responses API
 - RESTful API：
   - `POST /api/chat`：發送訊息（建立 / 延續對話）
   - `GET /api/chat/conversations`：取得對話列表
