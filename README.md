@@ -4,7 +4,7 @@
 
 ---
 
-## Features
+## 功能特色
 
 - 多對話管理（Conversation）
   - 左側列表顯示所有對話，依最後更新時間排序
@@ -30,7 +30,7 @@
 
 ---
 
-## Tech Stack
+## 技術棧
 
 **Frontend**
 
