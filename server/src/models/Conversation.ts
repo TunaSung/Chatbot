@@ -16,6 +16,8 @@ export class Conversation extends Model<
   declare id: CreationOptional<number>;
   declare userId: ForeignKey<User["id"]>;
   declare title: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 Conversation.init(
@@ -27,6 +29,16 @@ Conversation.init(
       references: { model: "users", key: "id" },
     },
     title: { type: DataTypes.STRING(225), allowNull: false },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize: sqlize,
