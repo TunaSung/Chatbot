@@ -20,7 +20,7 @@ function Navbar({ isBelow768, setIsAsideOpen }: NavbarProps) {
   };
 
   return (
-    <nav className="flex justify-between items-center p-4 border-b min-h-16">
+    <nav className="flex justify-between items-center p-4 border-b border-slate-300 min-h-16">
       {/* start logo & hamberger menu */}
       <div className="flex gap-3">
         {isBelow768 && (

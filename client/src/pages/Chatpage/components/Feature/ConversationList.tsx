@@ -40,13 +40,13 @@ function ConversationList({
           animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
           exit={{ clipPath: "inset(0% 100% 0% 0%)" }}
           transition={{ duration: 0.1, ease: "easeInOut" }}
-          className={`min-w-60 max-w-72 border-r bg-white flex flex-col 
-            ${isBelow768 && "absolute left-0 bg-white z-50 h-full"}
+          className={`min-w-60 max-w-72 flex flex-col border-r border-slate-300 
+            ${isBelow768 && "absolute left-0 z-50 h-full"}
           `}
         >
           {/* start header */}
-          <div className="p-4 flex items-center justify-between border-b min-h-16">
-            <h2 className="text-lg sm:text-2xl md:text-base font-semibold">
+          <div className="p-4 flex items-center justify-between min-h-16">
+            <h2 className="text-lg sm:text-xl md:text-base font-semibold">
               對話列表
             </h2>
             <div className="flex gap-2">
