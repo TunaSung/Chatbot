@@ -71,7 +71,13 @@ function ConversationList({
           {/* start conversations */}
           <div className="flex-1 overflow-y-auto">
             {conversations.map((c) => (
-              <ConvBtn key={c.id} conv={c} currentConvId={currentConvId} handleClick={handleClickConversation} />
+              <ConvBtn
+                key={c.id}
+                conv={c}
+                currentConvId={currentConvId}
+                handleClick={handleClickConversation}
+                onNewChat={onNewChat}
+              />
             ))}
             {/* end conversations */}
 

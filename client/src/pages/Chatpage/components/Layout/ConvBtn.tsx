@@ -13,9 +13,15 @@ type ConvBtnProps = {
   conv: Conversation;
   currentConvId: number | null;
   handleClick: (id: number) => void;
+  onNewChat: () => void;
 };
 
-function ConvBtn({ conv, currentConvId, handleClick }: ConvBtnProps) {
+function ConvBtn({
+  conv,
+  currentConvId,
+  handleClick,
+  onNewChat,
+}: ConvBtnProps) {
   const [title, setTitle] = useState<string>(conv.title);
   const [isEdit, setIsEdit] = useState(false);
   const { refreshConvs } = useAuth();
@@ -46,7 +52,7 @@ function ConvBtn({ conv, currentConvId, handleClick }: ConvBtnProps) {
       await editTile(newTitle, conv.id);
       await refreshConvs();
     } catch (err) {
-      toast.error(`名稱更改失敗`)
+      toast.error(`名稱更改失敗`);
       console.error("Update title failed", err);
       setTitle(conv.title);
     } finally {
@@ -77,7 +83,7 @@ function ConvBtn({ conv, currentConvId, handleClick }: ConvBtnProps) {
   const dropItems: MenuProps["items"] = [
     {
       key: "delete",
-      label: <DeleteBtn id={conv.id} />,
+      label: <DeleteBtn id={conv.id} onNewChat={onNewChat} />,
     },
     {
       key: "edit",
