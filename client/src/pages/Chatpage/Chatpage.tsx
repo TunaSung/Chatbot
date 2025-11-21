@@ -7,6 +7,7 @@ import ChatHeader from "./components/Feature/ChatHeader";
 import MessageList from "./components/Feature/MessageList";
 import ChatInput from "./components/Feature/ChatInput";
 import { useMediaQuery } from "react-responsive";
+import { toast } from 'react-toastify'
 
 function ChatPage() {
   const { isAuthenticated, conv: conversations, refreshConvs } = useAuth();
@@ -128,20 +129,21 @@ function ChatPage() {
             preMessages={preMsg}
             conversationId={currentConvId}
           />
-          {error && (
-            <div className="mx-3 px-3 py-2 text-xs text-red-600 bg-red-50">
-              {error}
-            </div>
-          )}
           <ChatInput
             value={input}
             onChange={setInput}
             onSend={handleSend}
             disabled={loading}
-          />
+            />
         </div>
       </main>
       {/* 聊天室 end */}
+
+      {/* start alert */}
+      {error && (
+        toast.error(error)
+      )}
+      {/* start alert */}
     </div>
   );
 }

@@ -16,7 +16,6 @@ function DeleteBtn({ id, onNewChat }: DeleteBtnProps) {
       await deleteConv(id);
       refreshConvs();
       onNewChat();
-      toast.success("刪除資料成功");
     } catch (error) {
       toast.error("刪除資料失敗");
     }
