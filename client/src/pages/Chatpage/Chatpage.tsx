@@ -13,6 +13,7 @@ function ChatPage() {
 
   const [currentConvId, setCurrentConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [preMsg, setPreMsg] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +24,11 @@ function ChatPage() {
   // 選擇聊天室時載入訊息
   useEffect(() => {
     if (!currentConvId) return;
-
+    setLoading(false);
+    setPreMsg([]);
     setError(null);
-    const fetchMsg = async () => {
+
+    const getMsg = async () => {
       try {
         const res = await getMessages(currentConvId);
         setMessages(res.messages);
@@ -35,44 +38,63 @@ function ChatPage() {
         );
       }
     };
-    fetchMsg();
+    getMsg();
   }, [currentConvId]);
 
   // 換聊天室換 id 跟清空 msg
   const handleSelectConversation = useCallback((id: number) => {
     setCurrentConvId(id);
     setMessages([]);
+    setPreMsg([]);
   }, []);
 
   // 新聊天室 id 丟 null 去後端才開新聊天室
   const handleNewChat = useCallback(() => {
     setCurrentConvId(null);
     setMessages([]);
+    setPreMsg([]);
   }, []);
 
   // 傳訊息
   const handleSend = useCallback(async () => {
-    if (!input.trim()) return;
+    const text = input.trim();
+    if (!text || loading) return;
 
     setError(null);
     setLoading(true);
+    setInput("");
+
+    const tempId = -Date.now();
+    const tempUserMsg: Message = {
+      id: tempId,
+      conversationId: currentConvId ?? -1,
+      role: "user",
+      content: text,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setPreMsg((prev) => {
+      const base = prev.length ? prev : messages;
+      return [...base, tempUserMsg];
+    });
 
     try {
-      const res = await sendMessage(input.trim(), currentConvId ?? undefined);
+      const res = await sendMessage(text, currentConvId ?? undefined);
 
       const { conversationId, messages: newMessages } = res.result;
 
       setCurrentConvId(conversationId);
       setMessages((prev) => [...prev, ...newMessages]);
-      setInput("");
 
+      await refreshConvs();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Send failed");
     } finally {
-      await refreshConvs();
       setLoading(false);
+      setPreMsg([]);
     }
-  }, [input, currentConvId, isAuthenticated, refreshConvs]);
+  }, [input, currentConvId, loading, messages, isAuthenticated, refreshConvs]);
 
   useEffect(() => {
     !isBelow768 ? setIsAsideOpen(true) : setIsAsideOpen(false);
@@ -100,7 +122,12 @@ function ChatPage() {
       >
         <ChatHeader isBelow768={isBelow768} setIsAsideOpen={setIsAsideOpen} />
         <div className="container-mid flex-1 flex flex-col min-h-0">
-          <MessageList messages={messages} conversationId={currentConvId} />
+          <MessageList
+            isLoading={loading}
+            messages={messages}
+            preMessages={preMsg}
+            conversationId={currentConvId}
+          />
           {error && (
             <div className="mx-3 px-3 py-2 text-xs text-red-600 bg-red-50">
               {error}

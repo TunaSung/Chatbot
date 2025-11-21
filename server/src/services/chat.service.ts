@@ -69,9 +69,6 @@ export async function handleChat(
     content: replyContent,
   });
 
-  await conv.update({ updatedAt: new Date() });
-  await conv.save()
-
   return {
     conversationId: conv.id,
     messages: [userMsg, aiMsg],
