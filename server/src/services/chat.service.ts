@@ -7,7 +7,7 @@ import type { HandleChat } from "../schemas/chat.schema.js";
 export async function handleChat(
   userId: number,
   conversationId: number | undefined,
-  message: string,
+  message: string
 ): Promise<HandleChat> {
   // 找或建立 conversation
   let conv: Conversation;
@@ -31,12 +31,13 @@ export async function handleChat(
     content: message,
   });
 
-  // 取得上下文
+  // 取得上下文：拿最新 20 筆
   const recentMsgs = await Message.findAll({
     where: { conversationId: conv.id },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
     limit: 20,
   });
+  const recentMsgsAsc = recentMsgs.reverse();
 
   const PROMPT =
     "You are a helpful chatbot for a demo web app. Answer concisely in Traditional Chinese.";
@@ -46,7 +47,7 @@ export async function handleChat(
       role: "system" as const,
       content: PROMPT,
     },
-    ...recentMsgs.map((msg) => ({
+    ...recentMsgsAsc.map((msg) => ({
       role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
     })),
