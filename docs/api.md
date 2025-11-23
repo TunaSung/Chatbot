@@ -100,37 +100,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 3) 刷新 Token（Renew + Rotation）
-**POST `/auth/refresh`**  
-**Auth：不需要（用 refreshToken）**
-
-> 用 refresh token 換新的 access token。  
-> 成功後回新的 access token + 新的 refresh token（rotation）。
-
-#### Request Body
-```json
-{
-  "refreshToken": "<refresh_token>"
-}
-```
-
-#### Response 200
-```json
-{
-  "message": "Token refreshed",
-  "token": "<new_access_token>",
-  "refreshToken": "<new_refresh_token>",
-  "user": {
-    "id": 5,
-    "username": "Test",
-    "email": "test@gmail.com"
-  }
-}
-```
-
----
-
-### 4) 登出（讓 refresh token 失效）
+### 3) 登出（讓 refresh token 失效）
 **POST `/auth/logout`**  
 **Auth：不需要（用 refreshToken）**
 
@@ -161,14 +131,6 @@ Content-Type: application/json
 {
   "email": "test@gmail.com",
   "password": "12345678"
-}
-
-### refresh（貼剛剛 signin 回來的 refreshToken）
-POST http://localhost:8080/api/auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "PASTE_REFRESH_TOKEN_HERE"
 }
 ```
 
