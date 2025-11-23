@@ -7,7 +7,7 @@ type NavbarProps = {
   setIsAsideOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-function Navbar({ isBelow768, setIsAsideOpen }: NavbarProps) {
+function ChatHeader({ isBelow768, setIsAsideOpen }: NavbarProps) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -49,4 +49,4 @@ function Navbar({ isBelow768, setIsAsideOpen }: NavbarProps) {
   );
 }
 
-export default Navbar;
+export default ChatHeader;
