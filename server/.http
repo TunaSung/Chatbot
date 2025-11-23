@@ -1,21 +1,41 @@
-# 註冊 / 登入 ---------------------------------------------------
+# 註冊 / 登入 / Refresh ---------------------------------------------------
 ###
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-    "username": "Ryan",
-    "email": "1231321@gmail.com",
-    "password": "123123"
+    "username": "Test",
+    "email": "test@gmail.com",
+    "password": "12345678"
 }
 
-###
+### @name signin
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-    "email": "1231321@gmail.com",
-    "password": "123123"
+  "email": "test@gmail.com",
+  "password": "12345678"
+}
+
+### debug
+GET http://localhost:8080/health
+Authorization: Bearer {{signin.response.body.token}}
+
+### 用上一段的 refreshToken (200)
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImlhdCI6MTc2MzkxNzg2OSwiZXhwIjoxNzY0NTIyNjY5fQ.7dduWE9Wxhco5nUf0a9PKfHxFsDl52S8bbXMtAfsG9U"
+}
+
+### 3) 再用一樣的 refreshToken refresh (401) **
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImlhdCI6MTc2MzkxNzg2OSwiZXhwIjoxNzY0NTIyNjY5fQ.7dduWE9Wxhco5nUf0a9PKfHxFsDl52S8bbXMtAfsG9U"
 }
 
 # 聊天機器人 ----------------------------------------------------

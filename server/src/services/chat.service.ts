@@ -16,10 +16,10 @@ export async function handleChat(
   let conv: Conversation;
   if (!conversationId) {
     const SUGGEST_PROMPT = [
-      "You are a concise assistant.",
-      "Summarize the user's message into ONE short chat title in Traditional Chinese.",
-      "Return ONLY the title text, no JSON, no quotes, no emoji.",
-      "Title <= 12 characters.",
+      "你是一位精簡扼要的助理。",
+      "請將使用者的訊息總結成「一個」簡短的聊天標題，使用繁體中文。",
+      "只回傳標題文字，不要輸出 JSON、不要加引號、不要使用表情符號。",
+      "標題長度需 ≤ 12 個字。",
     ].join(" ");
 
     const suggestTitle = await openai.chat.completions.create({
@@ -62,8 +62,15 @@ export async function handleChat(
   });
   const recentMsgsAsc = recentMsgs.reverse();
 
-  const PROMPT =
-    "You are a helpful chatbot for a demo web app. Answer concisely in Traditional Chinese.";
+  const PROMPT = `
+    你是 demo web app 的專業聊天助理，使用繁體中文簡潔回答。
+    請先在內部思考，再輸出最終答案（不要展示你的思考過程）。
+
+    優先規則：
+    1) 只用對話提供的資訊；缺資訊就說不確定並追問。
+    2) 不允許捏造任何事實、數據、來源。
+    3) 回答以可執行、可落地為主；避免空泛建議。
+  `.trim();
 
   const openaiMsgs = [
     {

@@ -89,8 +89,7 @@ export const signIn: RequestHandler = async (req, res) => {
 };
 
 /**
- * 刷新 access token (refresh token rotation)
- * POST /api/auth/refresh
+ * refresh token
  */
 export const refresh: RequestHandler = async (req, res) => {
   try {
@@ -152,7 +151,6 @@ export const refresh: RequestHandler = async (req, res) => {
 
 /**
  * 登出：清掉 refreshTokenHash
- * POST /api/auth/logout
  */
 export const logout: RequestHandler = async (req, res) => {
   try {
