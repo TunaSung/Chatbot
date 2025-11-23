@@ -1,9 +1,25 @@
-# environment
-.env.docker
-!.env.example
-*.env
-*.local
-/server/.env
-/server/.env.*
+# ==== node/build ====
 node_modules/
+client/node_modules/
+server/node_modules/
 dist/
+client/dist/
+server/dist/
+
+# ==== dotenv / secrets ====
+.env
+.env.*
+!.env.example
+
+# ==== docker local data ====
+mysql_data/
+data/
+
+# ==== logs ====
+*.log
+
+# ==== OS / editor ====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

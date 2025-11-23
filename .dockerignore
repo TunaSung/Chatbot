@@ -1,8 +1,17 @@
-**/node_modules
-**/.DS_Store
-**/dist
-**/build
-**/.env
+# don't send deps/build/secrets to docker build context
+node_modules
+client/node_modules
+server/node_modules
+
+dist
+client/dist
+server/dist
+
+.env
+.env.*
+docs
+
 .git
 .gitignore
-.vscode
+Dockerfile
+docker-compose*.yml

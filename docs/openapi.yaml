@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: ChatBot Demo API
+  version: 1.0.0
+  description: API for ChatBot Demo (Express + Sequelize + OpenAI)
+
+servers:
+  - url: http://localhost:3000
+    description: Local/Docker
+  - url: https://chatbot-production-2f6a.up.railway.app
+    description: Railway Production
+
+tags:
+  - name: Chat
+    description: Chat & conversations
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "你好"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-23T00:00:01.000Z"
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        conversationId:
+          type: integer
+          example: 1
+        role:
+          type: string
+          enum: [user, assistant, system]
+          example: "user"
+        content:
+          type: string
+          example: "你好"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SendMessageReq:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        conversationId:
+          type: integer
+          nullable: true
+
+    SendMessageRes:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "處裡用戶發送訊息成功"
+        result:
+          type: object
+          properties:
+            conversationId:
+              type: integer
+              example: 1
+            messages:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+
+    ListConversationsRes:
+      type: object
+      properties:
+        message:
+          type: string
+        convs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Conversation"
+
+    GetMessagesRes:
+      type: object
+      properties:
+        message:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+
+    UpdateTitleReq:
+      type: object
+      required: [title, conversationId]
+      properties:
+        title:
+          type: string
+        conversationId:
+          type: integer
+
+    UpdateTitleRes:
+      type: object
+      properties:
+        message:
+          type: string
+        conv:
+          $ref: "#/components/schemas/Conversation"
+
+    DeleteConversationRes:
+      type: object
+      properties:
+        message:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /chat:
+    post:
+      tags: [Chat]
+      summary: Send a message to chatbot (creates conversation if no id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageReq"
+      responses:
+        "200":
+          description: Send message success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageRes"
+
+  /chat/conversations:
+    get:
+      tags: [Chat]
+      summary: List conversations of current user
+      responses:
+        "200":
+          description: List conversations success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListConversationsRes"
+
+  /chat/conversations/{conversationId}/messages:
+    get:
+      tags: [Chat]
+      summary: Get messages by conversation id
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Get messages success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMessagesRes"
+        "404":
+          description: Conversation not found
+
+  /chat/conversations/update:
+    post:
+      tags: [Chat]
+      summary: Update conversation title
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTitleReq"
+      responses:
+        "200":
+          description: Update title success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateTitleRes"
+
+  /chat/conversations/{conversationId}:
+    delete:
+      tags: [Chat]
+      summary: Delete conversation
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delete conversation success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteConversationRes"
