@@ -56,7 +56,11 @@ function ChatPage() {
     setPreMsg([]);
   }, []);
 
-  // 傳訊息
+  /**
+   * 傳訊息
+   * 把訊息分成後端抓的 message 跟「複製 message + 最新訊息」的 preMsg
+   * AI 還在思考的時候就先呈現 preMsg
+   */
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
