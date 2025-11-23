@@ -30,3 +30,16 @@ export const signInSchema = z.object({
   params: z.object({}).strict(),
 });
 export type SignInBody = z.infer<typeof signInSchema>["body"];
+
+// 登入
+export const refreshSchema = z.object({
+  body: z
+    .object({
+      refreshToken: z.string()
+    })
+    .strict(),
+
+  query: z.object({}).strict(),
+  params: z.object({}).strict(),
+});
+export type RefreshBody = z.infer<typeof refreshSchema>["body"];

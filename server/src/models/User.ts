@@ -15,6 +15,7 @@ export class User extends Model<
   declare username: string;
   declare email: string;
   declare password: string;
+  declare refreshTokenHash: string | null;
 }
 
 User.init(
@@ -23,6 +24,7 @@ User.init(
     username: { type: DataTypes.STRING, allowNull: false },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.STRING, allowNull: false },
+    refreshTokenHash: { type: DataTypes.STRING, allowNull: true }, 
   },
   { sequelize: sqlize, modelName: "user", tableName: "users", timestamps: true }
 );

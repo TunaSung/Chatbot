@@ -6,13 +6,13 @@ import {
   useMemo,
   useEffect,
 } from "react";
-import { saveToken, clearToken } from "../../services/auth.service";
+import { saveToken, clearToken, setAuthHeader, logoutRemote } from "../../services/auth.service";
 import { getConversations } from "../../services/chat.service";
 import type { Conversation } from "../../types/chat.type";
 
 interface AuthContextValue {
   isAuthenticated: boolean;
-  login: (token: string) => Promise<void>;
+  login: (token: string, refreshToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   conv: Conversation[] | [];
   refreshConvs: () => Promise<void>;
@@ -30,29 +30,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshConvs = useCallback(async () => {
     try {
-      const res = await getConversations(); // { message, convs }
+      const res = await getConversations();
       setConv(res.convs || []);
       console.log("fetch conversation success");
-    } catch (error) {
+    } catch {
       console.log("fetch conversation failed");
     }
   }, []);
 
   useEffect(() => {
+    // 先把 header 補起來，避免第一次請求沒帶 token
+    setAuthHeader();
+
     const fetchConv = async () => {
       const token = localStorage.getItem("token");
       setIsAuthenticated(!!token);
 
       if (!token) return;
-
       await refreshConvs();
     };
     fetchConv();
   }, [refreshConvs]);
 
   const login = useCallback(
-    async (token: string) => {
-      saveToken(token);
+    async (token: string, refreshToken?: string) => {
+      saveToken(token, refreshToken);
       setIsAuthenticated(true);
       await refreshConvs();
     },
@@ -60,6 +62,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const logout = useCallback(async () => {
+    // 通知後端失效 refresh token
+    await logoutRemote();
     clearToken();
     setIsAuthenticated(false);
     setConv([]);

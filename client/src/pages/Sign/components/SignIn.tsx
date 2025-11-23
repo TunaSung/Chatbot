@@ -44,7 +44,7 @@ function SignIn({ toggleAuthView }: SignInProps) {
     try {
       setLoading(true);
       const res = await signIn(email, password);
-      login(res.token);
+      login(res.token, res.refreshToken);
       toast.success("Sign in successful");
       navigate("/chat");
     } catch (err) {
