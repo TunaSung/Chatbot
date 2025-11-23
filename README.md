@@ -119,6 +119,8 @@ Base URL:
 Auth:
 - `POST   /sign/signup`
 - `POST   /sign/signin`
+- `POST   /sign/refresh`
+- `POST   /sign/logout`
 
 Chat:
 - `POST   /chat`
@@ -148,6 +150,3 @@ OpenAPI/Swagger 規格：`docs/openapi.yaml`
 5. Railway 會自動注入 `PORT`，server 讀取後啟動
 
 ---
-
-## License
-MIT
