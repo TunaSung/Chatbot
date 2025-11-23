@@ -5,7 +5,7 @@ info:
   description: API for ChatBot Demo (Express + Sequelize + OpenAI)
 
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:8080
     description: Local/Docker
   - url: https://chatbot-production-2f6a.up.railway.app
     description: Railway Production
