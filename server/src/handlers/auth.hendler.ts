@@ -89,67 +89,6 @@ export const signIn: RequestHandler = async (req, res) => {
 };
 
 /**
- * refresh token
- */
-export const refresh: RequestHandler = async (req, res) => {
-  try {
-    const { refreshToken } = req.body as RefreshBody;
-    if (!refreshToken) {
-      return res.status(400).json({ error: "Missing refresh token" });
-    }
-
-    // 先驗 refresh token 是否有效
-    let payload: jwt.JwtPayload;
-    try {
-      payload = jwt.verify(
-        refreshToken,
-        process.env.REFRESH_SECRET!
-      ) as jwt.JwtPayload;
-    } catch {
-      return res.status(401).json({ error: "Invalid refresh token" });
-    }
-
-    const userId = payload.userId as number;
-    const user = await User.findByPk(userId);
-    if (!user || !user.refreshTokenHash) {
-      return res.status(401).json({ error: "Refresh token not recognized" });
-    }
-
-    // 比對 DB 裡存的 hash
-    const ok = await bcrypt.compare(refreshToken, user.refreshTokenHash);
-    if (!ok) {
-      return res.status(401).json({ error: "Refresh token mismatch" });
-    }
-
-    // 產新 access token + 新 refresh token
-    const newToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
-      expiresIn: "12h",
-    });
-
-    const newRefreshToken = jwt.sign(
-      { userId },
-      process.env.REFRESH_SECRET!,
-      { expiresIn: "7d" }
-    );
-
-    // 存新的 refresh hash，舊的作廢
-    user.refreshTokenHash = await bcrypt.hash(newRefreshToken, 12);
-    await user.save();
-
-    return res.status(200).json({
-      message: "Token refreshed",
-      token: newToken,
-      refreshToken: newRefreshToken,
-      user: pickSafeUser(user),
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return res.status(500).json({ error: "Refresh failed", details: errorMessage });
-  }
-};
-
-
-/**
  * 登出：清掉 refreshTokenHash
  */
 export const logout: RequestHandler = async (req, res) => {

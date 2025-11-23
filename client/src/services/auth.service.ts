@@ -60,25 +60,6 @@ export const signIn = async (
   }
 };
 
-// 手動 refresh
-export const refreshToken = async (): Promise<Pick<SignInResp, "token" | "refreshToken">> => {
-  const rt = getRefreshToken();
-  if (!rt) throw new Error("Missing refresh token");
-
-  try {
-    const res = await apiNoAuth.post("/auth/refresh", { refreshToken: rt });
-    const { token, refreshToken: newRT } = res.data as {
-      token: string;
-      refreshToken: string;
-    };
-    saveToken(token, newRT);
-    return { token, refreshToken: newRT };
-  } catch (error) {
-    clearToken();
-    throw new Error(getErrorMessage(error, "Refresh failed"));
-  }
-};
-
 // 登出
 export const logoutRemote = async (): Promise<void> => {
   const rt = getRefreshToken();
