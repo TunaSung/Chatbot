@@ -19,7 +19,7 @@ RUN npm run build
 # ==== Runtime ====
 FROM node:20-alpine AS runner
 WORKDIR /app/server
-ENV NODE_ENV=production
+ENV NODE_ENV=production PORT=3000
 
 # 只帶 production deps
 COPY server/package*.json ./
