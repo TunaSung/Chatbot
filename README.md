@@ -96,8 +96,8 @@ docker compose down -v
 ## Project Structure（簡）
 ```
 Chatbot/
- ├─ client/                 # React + Vite
- ├─ server/                 # Express + Sequelize
+ ├─ client/                 # TypeScript + React + Vite
+ ├─ server/                 # TypeScript + Express + Sequelize
  ├─ docs/                   # API files
  │   ├─ api.md
  │   └─ openapi.yaml
