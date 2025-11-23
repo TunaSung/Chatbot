@@ -1,4 +1,4 @@
-# ChatBot Demo（React + TypeScript + Express + MySQL + OpenAI）
+# ChatBot Demo
 
 一個具備多聊天室（Conversation）記憶的聊天機器人 Web App。  
 支援建立新對話、歷史對話列表、訊息即時顯示與 AI 思考中 loading、編輯/刪除對話、快速回到底部等功能，並完成 Docker 化與 Railway 部署。
