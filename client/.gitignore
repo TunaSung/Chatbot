@@ -28,6 +28,8 @@ dist-ssr
 # environment variables
 .env
 .env.*
+.env.docker
+!.env.example
 client/.env
 client/.env.*
 /server/.env

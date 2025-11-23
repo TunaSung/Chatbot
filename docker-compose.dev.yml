@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-mysql
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Taipei
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  server:
+    image: node:20-alpine
+    container_name: chatbot-server-dev
+    working_dir: /app/server
+    volumes:
+      - ./server:/app/server
+      - /app/server/node_modules
+    env_file: .env.docker
+    environment:
+      PORT: 3000
+      MYSQL_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+
+      TZ: Asia/Taipei
+    depends_on:
+      - mysql
+    ports:
+      - "3000:3000"
+    command: sh -c "npm ci && npm run dev"
+
+  client:
+    image: node:20-alpine
+    container_name: chatbot-client-dev
+    working_dir: /app/client
+    volumes:
+      - ./client:/app/client
+      - /app/client/node_modules
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - server
+
+volumes:
+  mysql_data:

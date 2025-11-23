@@ -1,4 +1,6 @@
 # environment
+.env.docker
+!.env.example
 *.env
 *.local
 /server/.env

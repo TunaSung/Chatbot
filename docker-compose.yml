@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-mysql
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Taipei
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # mysqladmin ping 成功後才算 healthy 
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: . # 以 repo root 當 build context
+      dockerfile: Dockerfile
+    container_name: chatbot-server
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy # 等 MySQL healthy 才啟動 server，否則 Sequelize 可能一啟動就連線失敗
+    env_file: .env.docker
+    environment:
+      PORT: 3000
+      MYSQL_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+
+      TZ: Asia/Taipei
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:
