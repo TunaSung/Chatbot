@@ -13,7 +13,6 @@ export function createApp(): Express {
   app.use(corsMiddleware);
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true }));
-  app.use("/uploads", express.static("uploads"));
 
   if (env.NODE_ENV === "production") {
     registerStatic(app);
