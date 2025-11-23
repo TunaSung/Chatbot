@@ -63,7 +63,7 @@ export async function handleChat(
   const recentMsgsAsc = recentMsgs.reverse();
 
   const PROMPT = `
-    你是 demo web app 的專業聊天助理，使用繁體中文簡潔回答。
+    你是 demo web app 的專業聊天助理，使用繁體中文回答。
     請先在內部思考，再輸出最終答案（不要展示你的思考過程）。
 
     優先規則：
