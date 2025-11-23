@@ -81,7 +81,7 @@ function ConvBtn({
     await submitTitle();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
       try {
         await deleteConv(id);
         refreshConvs();
@@ -89,7 +89,7 @@ function ConvBtn({
       } catch (error) {
         toast.error("刪除資料失敗");
       }
-    };
+    }, [conv.id]);
 
   const dropItems: MenuProps["items"] = [
     {

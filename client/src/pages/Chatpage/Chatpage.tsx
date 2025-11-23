@@ -47,6 +47,7 @@ function ChatPage() {
     setCurrentConvId(id);
     setMessages([]);
     setPreMsg([]);
+    isBelow768 ? setIsAsideOpen(false) : null;
   }, []);
 
   // 新聊天室 id 丟 null 去後端才開新聊天室
@@ -54,6 +55,7 @@ function ChatPage() {
     setCurrentConvId(null);
     setMessages([]);
     setPreMsg([]);
+    isBelow768 ? setIsAsideOpen(false) : null;
   }, []);
 
   /**
