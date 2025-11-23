@@ -7,6 +7,7 @@ import EditBtn from "../Feature/EditBtn";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../../components/Context/AuthContext";
 import { editTile } from "../../../../services/chat.service";
+import { deleteConv } from "../../../../services/chat.service";
 import { toast } from "react-toastify";
 
 type ConvBtnProps = {
@@ -34,7 +35,7 @@ function ConvBtn({
   }, [conv.title, isEdit]);
 
   const startEdit = useCallback(() => {
-    setTitle(conv.title); // 進入編輯時先同步最新 title
+    setTitle(conv.title);
     setIsEdit(true);
   }, [conv.title]);
 
@@ -80,16 +81,27 @@ function ConvBtn({
     await submitTitle();
   };
 
+  const handleDelete = async (id: number) => {
+      try {
+        await deleteConv(id);
+        refreshConvs();
+        onNewChat();
+      } catch (error) {
+        toast.error("刪除資料失敗");
+      }
+    };
+
   const dropItems: MenuProps["items"] = [
     {
       key: "delete",
-      label: <DeleteBtn id={conv.id} onNewChat={onNewChat} />,
+      label: <DeleteBtn id={conv.id} handleClick={handleDelete} />,
     },
     {
       key: "edit",
       label: <EditBtn onEdit={startEdit} />,
     },
   ];
+  
   return (
     <div
       className={`flex justify-between items-center mx-3 px-3 rounded-2xl hover:bg-slate-200 transition-colors duration-150 ${
@@ -126,13 +138,14 @@ function ConvBtn({
           </div>
         </div>
       )}
-      <Dropdown menu={{ items: dropItems }} trigger={["click"]}>
+      <Dropdown menu={{ items: dropItems }} trigger={["click"]} className="cursor-pointer" >
         <a onClick={(e) => e.preventDefault()}>
           <Space>
             <HiOutlineDotsHorizontal />
           </Space>
         </a>
       </Dropdown>
+      
     </div>
   );
 }
