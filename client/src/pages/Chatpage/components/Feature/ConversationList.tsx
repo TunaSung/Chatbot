@@ -40,7 +40,7 @@ function ConversationList({
           animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
           exit={{ clipPath: "inset(0% 100% 0% 0%)" }}
           transition={{ duration: 0.1, ease: "easeInOut" }}
-          className={`min-w-60 max-w-72 flex flex-col border-r border-slate-300 
+          className={`min-w-60 max-w-72 flex flex-col border-r border-slate-300  bg-white
             ${isBelow768 && "absolute left-0 z-50 h-full"}
           `}
         >
