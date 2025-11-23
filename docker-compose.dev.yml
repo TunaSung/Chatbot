@@ -12,8 +12,6 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Taipei
-    ports:
-      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
@@ -26,7 +24,7 @@ services:
       - /app/server/node_modules
     env_file: .env.docker
     environment:
-      PORT: 3000
+      PORT: 8080
       MYSQL_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       JWT_SECRET: ${JWT_SECRET}
@@ -38,7 +36,7 @@ services:
     depends_on:
       - mysql
     ports:
-      - "3000:3000"
+      - "8080:8080"
     command: sh -c "npm ci && npm run dev"
 
   client:

@@ -19,7 +19,7 @@ RUN npm run build
 # ==== Runtime ====
 FROM node:20-alpine AS runner
 WORKDIR /app/server
-ENV NODE_ENV=production PORT=3000
+ENV NODE_ENV=production PORT=8080
 
 # 只帶 production deps
 COPY server/package*.json ./
@@ -29,5 +29,5 @@ RUN npm ci --omit=dev
 COPY --from=serverbuild /app/server/dist ./dist
 COPY --from=clientbuild /app/client/dist ./public
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "dist/server.js"]
