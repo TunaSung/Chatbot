@@ -119,7 +119,6 @@ Base URL:
 Auth:
 - `POST   /sign/signup`
 - `POST   /sign/signin`
-- `POST   /sign/refresh`
 - `POST   /sign/logout`
 
 Chat:
