@@ -1,4 +1,5 @@
 import { MdDelete } from "react-icons/md";
+import { memo } from "react";
 
 type DeleteBtnProps = {
   id: number
@@ -13,4 +14,4 @@ function DeleteBtn({ id, handleClick }: DeleteBtnProps) {
   );
 }
 
-export default DeleteBtn;
+export default memo(DeleteBtn);

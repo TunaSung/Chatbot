@@ -4,7 +4,7 @@ import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import DeleteBtn from "../Feature/DeleteBtn";
 import EditBtn from "../Feature/EditBtn";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useAuth } from "../../../../components/Context/AuthContext";
 import { editTile } from "../../../../services/chat.service";
 import { deleteConv } from "../../../../services/chat.service";
@@ -150,4 +150,4 @@ function ConvBtn({
   );
 }
 
-export default ConvBtn;
+export default memo(ConvBtn);
