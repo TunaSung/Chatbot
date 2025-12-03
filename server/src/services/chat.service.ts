@@ -3,6 +3,8 @@ import { Message } from "../models/Message.js";
 import { openai } from "../config/openai.js";
 import "dotenv/config";
 import type { HandleChat } from "../schemas/chat.schema.js";
+import { getUserMemories, extractAndSaveMemories } from "../services/memory.service.js";
+import { getConversationSummary, updateConversationSummaryIfNeeded } from "../services/conversationSummary.service.js";
 
 export async function handleChat(
   userId: number,
@@ -53,7 +55,7 @@ export async function handleChat(
   });
 
   /**
-   * 取得上下文：拿最新 20 筆
+   * 取短期記憶 (最新 20 筆)
    */
   const recentMsgs = await Message.findAll({
     where: { conversationId: conv.id },
@@ -61,6 +63,12 @@ export async function handleChat(
     limit: 20,
   });
   const recentMsgsAsc = recentMsgs.reverse();
+
+  // 取長期記憶 + 對話摘要
+  const [memoryBlock, summaryBlock] = await Promise.all([
+    getUserMemories(userId),
+    getConversationSummary(conv.id),
+  ]);
 
   const PROMPT = `
     你是 demo web app 的專業聊天助理，使用繁體中文回答。
@@ -77,6 +85,22 @@ export async function handleChat(
       role: "system" as const,
       content: PROMPT,
     },
+    ...(memoryBlock
+      ? [
+          {
+            role: "system" as const,
+            content: memoryBlock.content,
+          },
+        ]
+      : []),
+    ...(summaryBlock
+      ? [
+          {
+            role: "system" as const,
+            content: summaryBlock.content,
+          },
+        ]
+      : []),
     ...recentMsgsAsc.map((msg) => ({
       role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
@@ -103,6 +127,14 @@ export async function handleChat(
     role: "assistant",
     content: replyContent,
   });
+
+  /**
+   * 更新長期記憶＋摘要
+   */
+  await Promise.all([
+    extractAndSaveMemories(userId, conv.id, [userMsg, aiMsg]),
+    updateConversationSummaryIfNeeded(conv.id),
+  ]);
 
   return {
     conversationId: conv.id,
