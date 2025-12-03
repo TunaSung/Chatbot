@@ -3,8 +3,14 @@ import { Message } from "../models/Message.js";
 import { openai } from "../config/openai.js";
 import "dotenv/config";
 import type { HandleChat } from "../schemas/chat.schema.js";
-import { getUserMemories, extractAndSaveMemories } from "../services/memory.service.js";
-import { getConversationSummary, updateConversationSummaryIfNeeded } from "../services/conversationSummary.service.js";
+import {
+  getUserMemories,
+  extractAndSaveMemories,
+} from "../services/memory.service.js";
+import {
+  getConversationSummary,
+  updateConversationSummaryIfNeeded,
+} from "../services/conversationSummary.service.js";
 
 export async function handleChat(
   userId: number,
@@ -73,6 +79,17 @@ export async function handleChat(
   const PROMPT = `
     你是 demo web app 的專業聊天助理，使用繁體中文回答。
     請先在內部思考，再輸出最終答案（不要展示你的思考過程）。
+
+    回答格式規則（很重要）：
+    1) 一律使用 Markdown 格式回答，可以使用標題、粗體、條列、表格與程式碼區塊。
+    2) 如果提供程式碼，請使用對應語言的 fenced code block，例如：
+      \`\`\`ts
+      // 這樣
+      \`\`\`
+      或
+      \`\`\`jsx
+      // 這樣
+      \`\`\`
 
     優先規則：
     1) 只用對話提供的資訊；缺資訊就說不確定並追問。
