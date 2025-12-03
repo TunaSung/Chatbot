@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, type UIEvent } from "react";
 import { motion } from "framer-motion";
 import type { Message } from "../../../../types/chat.type";
 import { FaArrowDown } from "react-icons/fa6";
+import ChatMessage from "./ChatMessage";
 import { Bouncy } from 'ldrs/react'
 import 'ldrs/react/Bouncy.css'
 
@@ -101,22 +102,7 @@ function MessageList({
         className="h-full overflow-y-auto p-4 space-y-3"
       >
         {displayMessages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex ${
-              m.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm sm:text-xl md:text-sm ${
-                m.role === "user"
-                  ? "bg-blue-600 text-white rounded-br-none"
-                  : "bg-white border rounded-bl-none"
-              }`}
-            >
-              {m.content}
-            </div>
-          </div>
+          <ChatMessage key={m.id} message={m} />
         ))}
 
         {/* ✅ loading bubble */}
