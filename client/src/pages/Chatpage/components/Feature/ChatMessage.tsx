@@ -29,12 +29,12 @@ function ChatMessage({ message }: ChatMessageProps) {
             components={{
               h1: ({ node, ...props }) => (
                 <h1
-                  className="text-base font-semibold mb-2 border-b border-slate-200 pb-1"
+                  className="text-lg font-semibold mb-2 border-b border-slate-200 pb-1"
                   {...props}
                 />
               ),
               h2: ({ node, ...props }) => (
-                <h2 className="text-sm font-semibold mt-2 mb-1" {...props} />
+                <h2 className="text-base font-semibold mt-2 mb-1" {...props} />
               ),
               h3: ({ node, ...props }) => (
                 <h2 className="text-sm font-semibold mt-2 mb-1" {...props} />
