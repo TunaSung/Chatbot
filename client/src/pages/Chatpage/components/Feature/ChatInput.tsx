@@ -60,7 +60,7 @@ function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps) {
         <button
           disabled={disabled}
           onClick={onSend}
-          className="px-3 py-1 rounded-lg flex bg-blue-600 text-white text-sm disabled:opacity-60"
+          className="px-3 py-1 rounded-lg flex bg-blue-600 text-white text-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
           送出
         </button>
