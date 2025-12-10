@@ -65,5 +65,18 @@ Memory.init(
     sequelize: sqlize,
     modelName: "memory",
     tableName: "memories",
+    indexes: [
+      {
+        name: "memories_user_content_unique",
+        unique: true,
+        fields: [
+          "userId",
+          {
+            name: "content",
+            length: 191,
+          },
+        ],
+      },
+    ],
   }
 );

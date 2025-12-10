@@ -39,5 +39,10 @@ Message.init(
     modelName: "message",
     tableName: "messages",
     timestamps: true,
+    indexes: [
+      {
+        fields: ["conversationId", "id"],
+      },
+    ],
   }
 );
