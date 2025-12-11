@@ -18,6 +18,8 @@ export class Memory extends Model<
   declare sourceConversationId: number | null;
   declare sourceMessageId: number | null;
   declare lastUsedAt: CreationOptional<Date>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 Memory.init(
@@ -60,12 +62,21 @@ Memory.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize: sqlize,
     modelName: "memory",
     tableName: "memories",
-    timestamps: false,
     indexes: [
       {
         name: "memories_user_content_unique",
