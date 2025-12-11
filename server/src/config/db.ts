@@ -3,7 +3,7 @@ import "dotenv/config";
 
 export const sqlize = new Sequelize(process.env.MYSQL_URL!, {
   dialect: "mysql",
-  logging: (sql) => console.log('[SQL]', sql),
+  logging: false,
   dialectOptions: { charset: "utf8mb4" },
   timezone: "+08:00",
   pool: {
