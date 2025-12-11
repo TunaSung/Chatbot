@@ -18,7 +18,7 @@ export async function connectDB(opts: ConnectOpts = {}) {
       await sqlize.authenticate();
 
       // dev 才 sync
-      if (opts.sync) await sqlize.sync();
+      await sqlize.sync();
 
       console.log('DB connected')
       return sqlize; // 連上放行給 server listen
