@@ -15,6 +15,8 @@ export class ConversationSummary extends Model<
   declare conversationId: number;
   declare summary: string;
   declare messageCountAtLastSummary: number;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 ConversationSummary.init(
@@ -36,6 +38,16 @@ ConversationSummary.init(
     messageCountAtLastSummary: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   },
   {
