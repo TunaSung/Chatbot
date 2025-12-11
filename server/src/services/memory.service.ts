@@ -41,7 +41,7 @@ export async function extractAndSaveMemories(
    */
   const recent = await Message.findAll({
     where: { conversationId },
-    order: [["lastUsedAt", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: 8,
   });
   const recentAsc = recent.reverse();
