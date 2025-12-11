@@ -1,4 +1,8 @@
 import { Memory, Message } from "../models/Association.js";
+import {
+  normalizeMemoryContent,
+  isSimilarMemory,
+} from "./utils/memory.util.js";
 import { openai } from "../config/openai.js";
 
 /**
@@ -33,7 +37,7 @@ export async function extractAndSaveMemories(
   newMessages: Message[]
 ) {
   /**
-   * 抓這個對話裡最新幾則訊息
+   * 抓近幾則訊息出來
    */
   const recent = await Message.findAll({
     where: { conversationId },
@@ -97,20 +101,90 @@ export async function extractAndSaveMemories(
     return;
   }
 
-  if (!Array.isArray(parsed) || !parsed.length) return;
+  /**
+   * 整理一輪新技藝的候選
+   * 先在同一輪裡去重複
+   * ↓
+   * 同樣 content 合併 importance 取最大
+   */
+  const candidateMap = new Map<string, number>(); // Map<normalizedContent, importance>
 
   for (const m of parsed) {
-    if (!m.content || typeof m.content !== "string") continue;
+    if (!m || typeof m.content !== "string") continue;
+    const normalized = normalizeMemoryContent(m.content);
+    if (!normalized) continue;
 
-    await Memory.create({
-      userId,
-      content: m.content,
-      importance:
-        typeof m.importance === "number"
-          ? Math.min(5, Math.max(1, m.importance))
-          : 3,
-      sourceConversationId: conversationId,
-      sourceMessageId: newMessages[newMessages.length - 1]?.id ?? null,
-    });
+    const rawImportance = typeof m.importance === "number" ? m.importance : 3;
+    const importance = Math.min(5, Math.max(1, rawImportance));
+
+    /**
+     * 看看這個 normalizedContent 在這一輪裡是否出現過
+     * 第一次出現把 normalized, importance 放入
+     * 不是第一次的話 importance 取最大的用
+     */
+    // 
+    const prev = candidateMap.get(normalized);
+    if (prev != null) {
+      candidateMap.set(normalized, Math.max(prev, importance));
+    } else {
+      candidateMap.set(normalized, importance);
+    }
+  }
+
+  if (candidateMap.size === 0) return;
+
+  const latestMsgId = newMessages[newMessages.length - 1]?.id ?? null;
+
+  /**
+   * 撈出 user 目前的現有記憶
+   */
+  const existingMemories = await Memory.findAll({
+    where: { userId },
+  });
+
+  /**
+   * 對每一個候選記憶，找一條最相似的現有記憶
+   * 相似度超過門檻就合併
+   */
+  for (const [normalizedContent, importance] of candidateMap.entries()) {
+    // 先在現有記憶中找最像的那一條
+    let bestMatch: Memory | null = null;
+
+    /**
+     * 用 isSimilarMemory 判斷下面兩個 content 要不要合併成同一條記憶
+     * mem.content: 使用者 memory 裡的 content
+     * normalizedContent: 這一輪檢查的 content
+     */
+    for (const mem of existingMemories) {
+      if (isSimilarMemory(mem.content, normalizedContent)) {
+        bestMatch = mem;
+        break; // 先直接認定，後續還有規則的話再加
+      }
+    }
+
+    // bestMatch 有值(要合併的話) 更新那條現有記憶
+    if (bestMatch) {
+      // 更新 importance
+      const newImportance = Math.max(bestMatch.importance, importance);
+
+      await bestMatch.update({
+        content: normalizedContent,
+        importance: newImportance,
+        sourceConversationId: conversationId,
+        sourceMessageId: latestMsgId ?? bestMatch.sourceMessageId,
+      });
+    } else {
+      // 沒有任何一條夠像就直接新增一筆記憶
+      const created = await Memory.create({
+        userId,
+        content: normalizedContent,
+        importance,
+        sourceConversationId: conversationId,
+        sourceMessageId: latestMsgId,
+      });
+
+      // 靶新的記憶下入陣列讓後續迴圈能讀到
+      existingMemories.push(created);
+    }
   }
 }

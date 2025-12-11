@@ -38,6 +38,21 @@ export const getMessagesParamsSchema = z
   })
   .strict();
 
+export const getMessagesQuerySchema = z.object({
+  limit: z
+    .string()
+    .regex(/^\d+$/)
+    .transform((v) => Number(v))
+    .optional(),
+  cursor: z
+    .string()
+    .regex(/^\d+$/)
+    .transform((v) => Number(v))
+    .optional(),
+});
+
+export type GetMessagesQuery = z.infer<typeof getMessagesQuerySchema>;
+
 export const deleteConversationParamsSchema = z
   .object({
     id: z.coerce.number().int().positive(),

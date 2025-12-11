@@ -31,6 +31,8 @@ export type FetchConversationsRep = {
 export type FetchMessagesRep = {
   message: string;
   messages: Message[];
+  hasMore: boolean;
+  nextCursor: number | null;
 };
 
 export type DeleteConvRep = {
