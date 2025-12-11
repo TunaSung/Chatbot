@@ -37,7 +37,7 @@ function ChatMessage({ message }: ChatMessageProps) {
                 <h2 className="text-base font-semibold mt-2 mb-1" {...props} />
               ),
               h3: ({ node, ...props }) => (
-                <h2 className="text-sm font-semibold mt-2 mb-1" {...props} />
+                <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />
               ),
               p: ({ node, ...props }) => (
                 <p className="whitespace-pre-wrap" {...props} />
