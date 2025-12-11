@@ -17,6 +17,8 @@ export class Message extends Model<
   declare conversationId: ForeignKey<Conversation["id"]>;
   declare role: "user" | "assistant" | "system";
   declare content: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 Message.init(
@@ -33,12 +35,21 @@ Message.init(
       allowNull: false,
     },
     content: { type: DataTypes.TEXT("long"), allowNull: false },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize: sqlize,
     modelName: "message",
     tableName: "messages",
-    timestamps: true,
     indexes: [
       {
         fields: ["conversationId", "id"],
