@@ -44,6 +44,5 @@ Conversation.init(
     sequelize: sqlize,
     modelName: "conversation",
     tableName: "conversations",
-    timestamps: true,
   }
 );
