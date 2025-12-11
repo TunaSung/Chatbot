@@ -65,6 +65,7 @@ Memory.init(
     sequelize: sqlize,
     modelName: "memory",
     tableName: "memories",
+    timestamps: false,
     indexes: [
       {
         name: "memories_user_content_unique",
