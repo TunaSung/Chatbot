@@ -25,7 +25,7 @@ function ChatPage() {
   // 選擇聊天室時載入訊息
   useEffect(() => {
     if (!currentConvId) return;
-    setLoading(false);
+    setLoading(true);
     setPreMsg([]);
     setError(null);
 
@@ -34,13 +34,20 @@ function ChatPage() {
         const res = await getMessages(currentConvId);
         setMessages(res.messages);
       } catch (error) {
-        setError(
-          error instanceof Error ? error.message : "Fetch messages failed"
-        );
+        setError(error instanceof Error ? error.message : "Fetch messages failed");
+      } finally {
+        setLoading(false);
       }
     };
     getMsg();
   }, [currentConvId]);
+
+
+  // 錯誤訊息
+  useEffect(() => {
+    if (!error) return;
+    toast.error(error, { toastId: 'chat-error' }); // toastId 防止重複跳很多個
+  }, [error]);
 
   // 換聊天室換 id 跟清空 msg
   const handleSelectConversation = useCallback((id: number) => {
@@ -48,7 +55,7 @@ function ChatPage() {
     setMessages([]);
     setPreMsg([]);
     isBelow768 ? setIsAsideOpen(false) : null;
-  }, []);
+  }, [isBelow768]);
 
   // 新聊天室 id 丟 null 去後端才開新聊天室
   const handleNewChat = useCallback(() => {
@@ -56,7 +63,7 @@ function ChatPage() {
     setMessages([]);
     setPreMsg([]);
     isBelow768 ? setIsAsideOpen(false) : null;
-  }, []);
+  }, [isBelow768]);
 
   /**
    * 傳訊息
@@ -144,12 +151,6 @@ function ChatPage() {
         </div>
       </main>
       {/* 聊天室 end */}
-
-      {/* start alert */}
-      {error && (
-        toast.error(error)
-      )}
-      {/* start alert */}
     </div>
   );
 }
