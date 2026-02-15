@@ -1,4 +1,4 @@
--- Active: 1751372420486@@127.0.0.1@3306@chatbot
+-- Active: 1771167352511@@127.0.0.1@3306@chatbot
 USE `chatbot`
 
 INSERT INTO users (username, email, password, createdAt, updatedAt)
