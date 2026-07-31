@@ -4,7 +4,7 @@ import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import DeleteBtn from "../Feature/DeleteBtn";
 import EditBtn from "../Feature/EditBtn";
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useCallback, memo } from "react";
 import { useAuth } from "../../../../components/Context/AuthContext";
 import { editTile } from "../../../../services/chat.service";
 import { deleteConv } from "../../../../services/chat.service";
@@ -23,19 +23,13 @@ function ConvBtn({
   handleClick,
   onNewChat,
 }: ConvBtnProps) {
-  const [title, setTitle] = useState<string>(conv.title);
+  const [draftTitle, setDraftTitle] = useState<string | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const { refreshConvs } = useAuth();
-
-  // conv.title 從外面更新時，非編輯狀態下同步到內部 state
-  useEffect(() => {
-    if (!isEdit) {
-      setTitle(conv.title);
-    }
-  }, [conv.title, isEdit]);
+  const title = draftTitle ?? conv.title;
 
   const startEdit = useCallback(() => {
-    setTitle(conv.title);
+    setDraftTitle(conv.title);
     setIsEdit(true);
   }, [conv.title]);
 
@@ -45,7 +39,7 @@ function ConvBtn({
     // 沒改或空白不送出
     if (!newTitle || newTitle === conv.title) {
       setIsEdit(false);
-      setTitle(conv.title);
+      setDraftTitle(null);
       return;
     }
 
@@ -55,9 +49,9 @@ function ConvBtn({
     } catch (err) {
       toast.error(`名稱更改失敗`);
       console.error("Update title failed", err);
-      setTitle(conv.title);
     } finally {
       setIsEdit(false);
+      setDraftTitle(null);
     }
   }, [title, conv.id, conv.title, refreshConvs]);
 
@@ -70,7 +64,7 @@ function ConvBtn({
     } else if (e.key === "Escape") {
       // Esc 取消編輯
       setIsEdit(false);
-      setTitle(conv.title);
+      setDraftTitle(null);
     }
   };
 
@@ -81,15 +75,18 @@ function ConvBtn({
     await submitTitle();
   };
 
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDelete = useCallback(
+    async (id: number) => {
       try {
         await deleteConv(id);
-        refreshConvs();
+        await refreshConvs();
         onNewChat();
-      } catch (error) {
+      } catch {
         toast.error("刪除資料失敗");
       }
-    }, [conv.id]);
+    },
+    [onNewChat, refreshConvs]
+  );
 
   const dropItems: MenuProps["items"] = [
     {
@@ -129,7 +126,7 @@ function ConvBtn({
             className="border border-slate-300 rounded-md px-2 py-1 w-full text-sm"
             autoFocus
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => setDraftTitle(e.target.value)}
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
           />

@@ -146,7 +146,38 @@ Authorization: Bearer <token>
 
 ---
 
-### 1) 傳送訊息
+### 1) 串流傳送訊息（前端預設）
+**POST `/chat/stream`**
+
+**Auth：需要**
+
+**Response Content-Type：`text/event-stream`**
+
+Request Body 與 `POST /chat` 相同。伺服器依序送出下列 SSE event：
+
+```text
+event: ready
+data: {"conversationId":1,"userMessage":{...}}
+
+event: delta
+data: {"content":"逐步"}
+
+event: complete
+data: {"assistantMessage":{...}}
+
+event: done
+data: {}
+```
+
+- `ready`：對話與使用者訊息已寫入資料庫。
+- `delta`：可出現多次，前端應依收到順序附加內容。
+- `complete`：完整助理訊息已寫入資料庫。
+- `done`：串流正常結束。
+- `error`：串流失敗，payload 內含可顯示的 `message`。
+
+---
+
+### 2) 傳送訊息（相容用 JSON API）
 **POST `/chat`**  
 **Auth：需要**
 
@@ -194,7 +225,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 2) 取得所有對話
+### 3) 取得所有對話
 **GET `/chat/conversations`**  
 **Auth：需要**
 
@@ -214,7 +245,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 3) 取得對話訊息
+### 4) 取得對話訊息
 **GET `/chat/conversations/:conversationId/messages`**  
 **Auth：需要**
 
@@ -244,7 +275,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 4) 更新對話標題
+### 5) 更新對話標題
 **POST `/chat/conversations/update`**  
 **Auth：需要**
 
@@ -275,7 +306,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 5) 刪除對話
+### 6) 刪除對話
 **DELETE `/chat/conversations/:conversationId/delete`**  
 **Auth：需要**
 

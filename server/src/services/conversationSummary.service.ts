@@ -1,6 +1,7 @@
 import { ConversationSummary } from "../models/ConversationSummary.js";
 import { Message } from "../models/Association.js";
 import { openai } from "../config/openai.js";
+import { env } from "../config/env.js";
 
 /**
  * 取得單一聊天室的 summary
@@ -38,6 +39,9 @@ export async function updateConversationSummaryIfNeeded(
    * 避免每聊一句就重算一次 summary，浪費 token 跟時間
    */
   const THRESHOLD = 30;
+  if (!existing && totalCount < THRESHOLD) {
+    return;
+  }
   if (existing && totalCount - existing.messageCountAtLastSummary < THRESHOLD) {
     return;
   }
@@ -71,12 +75,11 @@ export async function updateConversationSummaryIfNeeded(
     `.trim();
 
   const completion = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL!,
+    model: env.OPENAI_MODEL,
     messages: [
       { role: "system", content: SUMMARY_PROMPT },
       { role: "user", content: dialogText },
     ],
-    temperature: 0.2,
   });
 
   const summaryText = completion.choices[0]?.message?.content?.trim();

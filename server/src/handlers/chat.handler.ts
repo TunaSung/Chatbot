@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
-import { handleChat } from "../services/chat.service.js";
+import { handleChat, streamChat } from "../services/chat.service.js";
 import { Conversation, Message } from "../models/Association.js";
+import { writeSseEvent } from "../utils/sse.js";
 import {
   deleteConversationParamsSchema,
   getMessagesParamsSchema,
@@ -23,6 +24,61 @@ export const postChat: RequestHandler = async (req, res, next) => {
     res.status(200).json({ message: "處裡用戶發送訊息成功", result });
   } catch (error) {
     next(error);
+  }
+};
+
+export const postChatStream: RequestHandler = async (req, res) => {
+  if (!req.user?.id) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  res.status(200);
+  res.set({
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+  res.write(": connected\n\n");
+
+  const abortController = new AbortController();
+  const abortIfDisconnected = () => {
+    if (!res.writableEnded) abortController.abort();
+  };
+  req.once("aborted", abortIfDisconnected);
+  res.once("close", abortIfDisconnected);
+
+  const heartbeat = setInterval(() => {
+    if (!res.writableEnded && !res.destroyed) {
+      res.write(": keep-alive\n\n");
+    }
+  }, 15_000);
+
+  try {
+    const { message, conversationId } = req.body as postChatBody;
+    for await (const event of streamChat(
+      req.user.id,
+      conversationId,
+      message,
+      abortController.signal
+    )) {
+      const { type, ...data } = event;
+      await writeSseEvent(res, type, data);
+    }
+  } catch (error) {
+    if (!abortController.signal.aborted) {
+      console.error("Chat stream failed", error);
+      await writeSseEvent(res, "error", {
+        message: "串流回覆失敗，請稍後再試。",
+      });
+    }
+  } finally {
+    clearInterval(heartbeat);
+    req.off("aborted", abortIfDisconnected);
+    res.off("close", abortIfDisconnected);
+    if (!res.writableEnded && !res.destroyed) res.end();
   }
 };
 
@@ -60,14 +116,10 @@ export const getMessages: RequestHandler = async (req, res, next) => {
     }
 
     // 組 where 條件
-    const where: any = {
+    const where = {
       conversationId: conv.id,
+      ...(cursor ? { id: { [Op.lt]: cursor } } : {}),
     };
-
-    if (cursor) {
-      // 往「更舊」的訊息拿：id < cursor
-      where.id = { [Op.lt]: cursor };
-    }
 
     // 撈資料：多撈一筆來判斷 hasMore
     const rows = await Message.findAll({

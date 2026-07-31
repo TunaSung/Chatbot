@@ -39,7 +39,7 @@ export const signUp = async (
     });
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, "Sign up failed"));
+    throw new Error(getErrorMessage(error, "Sign up failed"), { cause: error });
   }
 };
 
@@ -56,7 +56,7 @@ export const signIn = async (
     saveToken(token, refreshToken);
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, "Sign in failed"));
+    throw new Error(getErrorMessage(error, "Sign in failed"), { cause: error });
   }
 };
 

@@ -1,8 +1,8 @@
 import { Conversation } from "../models/Conversation.js";
 import { Message } from "../models/Message.js";
 import { openai } from "../config/openai.js";
-import "dotenv/config";
 import type { HandleChat } from "../schemas/chat.schema.js";
+import { env } from "../config/env.js";
 import {
   getUserMemories,
   extractAndSaveMemories,
@@ -12,36 +12,37 @@ import {
   updateConversationSummaryIfNeeded,
 } from "../services/conversationSummary.service.js";
 
-export async function handleChat(
+export type ChatStreamEvent =
+  | {
+      type: "ready";
+      conversationId: number;
+      userMessage: Message;
+    }
+  | { type: "delta"; content: string }
+  | { type: "complete"; assistantMessage: Message }
+  | { type: "done" };
+
+function createConversationTitle(message: string): string {
+  const characters = Array.from(message.replace(/\s+/g, " ").trim());
+  const title = characters.slice(0, 30).join("");
+  return characters.length > 30 ? `${title}…` : title;
+}
+
+export async function* streamChat(
   userId: number,
   conversationId: number | undefined,
-  message: string
-): Promise<HandleChat> {
+  message: string,
+  signal?: AbortSignal
+): AsyncGenerator<ChatStreamEvent> {
   /**
    * 找或建立 conversation
-   * 新建立的話( 沒有傳 convId 進來 )讓 AI 解析一下 message 內容來想對話 title
+   * 新對話直接從第一則訊息產生標題，避免多一次模型呼叫拖慢首個 token。
    */
   let conv: Conversation;
   if (!conversationId) {
-    const SUGGEST_PROMPT = [
-      "你是一位精簡扼要的助理。",
-      "請將使用者的訊息總結成「一個」簡短的聊天標題，使用繁體中文。",
-      "只回傳標題文字，不要輸出 JSON、不要加引號、不要使用表情符號。",
-      "標題長度需 ≤ 12 個字。",
-    ].join(" ");
-
-    const suggestTitle = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL!,
-      messages: [
-        { role: "system", content: SUGGEST_PROMPT },
-        { role: "user", content: message },
-      ],
-      temperature: 0.3,
-    });
-
     conv = await Conversation.create({
       userId,
-      title: suggestTitle.choices?.[0]?.message?.content?.trim() ?? "",
+      title: createConversationTitle(message),
     });
   } else {
     const found = await Conversation.findOne({
@@ -59,22 +60,30 @@ export async function handleChat(
     role: "user",
     content: message,
   });
+  await Conversation.update(
+    { updatedAt: new Date() },
+    { where: { id: conv.id } }
+  );
+
+  yield {
+    type: "ready",
+    conversationId: conv.id,
+    userMessage: userMsg,
+  };
 
   /**
    * 取短期記憶 (最新 20 筆)
    */
-  const recentMsgs = await Message.findAll({
-    where: { conversationId: conv.id },
-    order: [["createdAt", "DESC"]],
-    limit: 20,
-  });
-  const recentMsgsAsc = recentMsgs.reverse();
-
-  // 取長期記憶 + 對話摘要
-  const [memoryBlock, summaryBlock] = await Promise.all([
+  const [recentMsgs, memoryBlock, summaryBlock] = await Promise.all([
+    Message.findAll({
+      where: { conversationId: conv.id },
+      order: [["createdAt", "DESC"]],
+      limit: 20,
+    }),
     getUserMemories(userId),
     getConversationSummary(conv.id),
   ]);
+  const recentMsgsAsc = recentMsgs.reverse();
 
   const PROMPT = `
     你是 demo web app 的專業聊天助理，使用繁體中文回答。
@@ -136,13 +145,26 @@ export async function handleChat(
    * OpenAi Api
    */
   const completion = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL!,
+    model: env.OPENAI_MODEL,
     messages: openaiMsgs,
-    temperature: 0.3,
+    stream: true,
+  }, {
+    signal,
   });
 
-  const replyContent =
-    completion.choices[0]?.message?.content ?? "已停止思考，請稍後在試";
+  let replyContent = "";
+  for await (const chunk of completion) {
+    if (signal?.aborted) return;
+    const content = chunk.choices[0]?.delta?.content;
+    if (!content) continue;
+
+    replyContent += content;
+    yield { type: "delta", content };
+  }
+
+  if (!replyContent.trim()) {
+    throw new Error("OpenAI returned an empty response");
+  }
 
   /**
    * 存 AI 訊息
@@ -152,17 +174,45 @@ export async function handleChat(
     role: "assistant",
     content: replyContent,
   });
+  yield { type: "complete", assistantMessage: aiMsg };
 
   /**
    * 更新長期記憶＋摘要
    */
-  await Promise.all([
+  void Promise.all([
     extractAndSaveMemories(userId, conv.id, [userMsg, aiMsg]),
     updateConversationSummaryIfNeeded(conv.id),
-  ]);
+  ]).catch((error) => {
+    console.error("Chat post-processing failed", error);
+  });
+
+  yield { type: "done" };
+}
+
+export async function handleChat(
+  userId: number,
+  conversationId: number | undefined,
+  message: string
+): Promise<HandleChat> {
+  let resultConversationId: number | undefined;
+  let userMessage: Message | undefined;
+  let assistantMessage: Message | undefined;
+
+  for await (const event of streamChat(userId, conversationId, message)) {
+    if (event.type === "ready") {
+      resultConversationId = event.conversationId;
+      userMessage = event.userMessage;
+    } else if (event.type === "complete") {
+      assistantMessage = event.assistantMessage;
+    }
+  }
+
+  if (!resultConversationId || !userMessage || !assistantMessage) {
+    throw new Error("Chat did not complete");
+  }
 
   return {
-    conversationId: conv.id,
-    messages: [userMsg, aiMsg],
+    conversationId: resultConversationId,
+    messages: [userMessage, assistantMessage],
   };
 }

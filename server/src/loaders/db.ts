@@ -1,4 +1,5 @@
 import { sqlize } from "../config/db.js";
+import { runMigrations } from "../db/migrations/index.js";
 
 type ConnectOpts = {
   sync?: boolean; // 是否要同步
@@ -19,6 +20,7 @@ export async function connectDB(opts: ConnectOpts = {}) {
 
       // dev 才 sync
       if (opts.sync) await sqlize.sync();
+      await runMigrations(sqlize);
 
       console.log('DB connected')
       return sqlize; // 連上放行給 server listen

@@ -28,33 +28,52 @@ function ChatMessage({ message }: ChatMessageProps) {
             rehypePlugins={[rehypeHighlight]}
             components={{
               h1: ({ node, ...props }) => (
-                <h1
-                  className="text-lg font-semibold mb-2 border-b border-slate-200 pb-1"
-                  {...props}
-                />
+                <>
+                  {void node}
+                  <h1
+                    className="text-lg font-semibold mb-2 border-b border-slate-200 pb-1"
+                    {...props}
+                  />
+                </>
               ),
               h2: ({ node, ...props }) => (
-                <h2 className="text-base font-semibold mt-2 mb-1" {...props} />
+                <>
+                  {void node}
+                  <h2 className="text-base font-semibold mt-2 mb-1" {...props} />
+                </>
               ),
               h3: ({ node, ...props }) => (
-                <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />
+                <>
+                  {void node}
+                  <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />
+                </>
               ),
               p: ({ node, ...props }) => (
-                <p className="whitespace-pre-wrap" {...props} />
+                <>
+                  {void node}
+                  <p className="whitespace-pre-wrap" {...props} />
+                </>
               ),
               ul: ({ node, ...props }) => (
-                <ul
-                  className="list-disc list-inside space-y-1 mb-2"
-                  {...props}
-                />
+                <>
+                  {void node}
+                  <ul
+                    className="list-disc list-inside space-y-1 mb-2"
+                    {...props}
+                  />
+                </>
               ),
               ol: ({ node, ...props }) => (
-                <ol
-                  className="list-decimal list-inside space-y-1 mb-2"
-                  {...props}
-                />
+                <>
+                  {void node}
+                  <ol
+                    className="list-decimal list-inside space-y-1 mb-2"
+                    {...props}
+                  />
+                </>
               ),
-              code: ({ className, children, ...props }: any) => {
+              code: ({ node, className, children, ...props }) => {
+                void node;
                 const text = String(children ?? "");
 
                 const hasLanguage = (className ?? "").startsWith("language-");

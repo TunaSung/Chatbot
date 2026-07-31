@@ -89,6 +89,10 @@ Memory.init(
           },
         ],
       },
+      {
+        name: "memories_user_importance_last_used",
+        fields: ["userId", "importance", "lastUsedAt"],
+      },
     ],
   }
 );

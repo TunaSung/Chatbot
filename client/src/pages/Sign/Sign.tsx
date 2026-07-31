@@ -6,6 +6,13 @@ import type { Variants, Transition } from "framer-motion";
 
 type AuthView = "signin" | "signup";
 
+const baseSpring: Transition = {
+  type: "spring",
+  stiffness: 320,
+  damping: 28,
+  mass: 0.9,
+};
+
 function Sign() {
   const [authView, setAuthView] = useState<AuthView>("signin");
   const prefersReducedMotion = useReducedMotion();
@@ -13,20 +20,24 @@ function Sign() {
   const toggleAuthView = () =>
     setAuthView((v) => (v === "signin" ? "signup" : "signin"));
 
-  const baseSpring: Transition = {
-    type: "spring",
-    stiffness: 320,
-    damping: 28,
-    mass: 0.9,
-  };
-
   const variants: Variants = useMemo(
-    () => ({
-      start: { opacity: 0, y: -10 },
-      enter: { opacity: 1, y: 0, transition: baseSpring },
-      exit: { opacity: 0, y: 10, transition: { ...baseSpring, damping: 30 } },
-    }),
-    [baseSpring, prefersReducedMotion]
+    () =>
+      prefersReducedMotion
+        ? {
+            start: { opacity: 1 },
+            enter: { opacity: 1 },
+            exit: { opacity: 1 },
+          }
+        : {
+            start: { opacity: 0, y: -10 },
+            enter: { opacity: 1, y: 0, transition: baseSpring },
+            exit: {
+              opacity: 0,
+              y: 10,
+              transition: { ...baseSpring, damping: 30 },
+            },
+          },
+    [prefersReducedMotion]
   );
 
   return (

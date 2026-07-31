@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import "dotenv/config";
 import { User } from "../models/Association.js";
+import { env } from "../config/env.js";
 
 interface AccessTokenPayload extends JwtPayload {
   userId: number;
@@ -26,17 +26,15 @@ const authenticate: RequestHandler = async (req, res, next) => {
         });
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      return res
-        .status(500)
-        .json({ code: "SERVER_MISCONFIG", message: "未設定 JWT_SECRET" });
-    }
-
     // 驗證 & 解碼
     let payload: AccessTokenPayload;
     try {
-      payload = jwt.verify(token, secret) as AccessTokenPayload;
+      payload = jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+      if (typeof payload.userId !== "number") {
+        return res
+          .status(401)
+          .json({ code: "TOKEN_INVALID", message: "無效的身份驗證令牌" });
+      }
     } catch (e) {
       if (e instanceof jwt.TokenExpiredError) {
         return res

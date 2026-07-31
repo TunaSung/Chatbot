@@ -29,7 +29,9 @@ ConversationSummary.init(
     conversationId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: "conversation_summaries_conversation_unique",
       references: { model: "conversations", key: "id" },
+      onDelete: "CASCADE",
     },
     summary: {
       type: DataTypes.TEXT,

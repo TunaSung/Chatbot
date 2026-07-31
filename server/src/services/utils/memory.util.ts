@@ -32,9 +32,9 @@ function levenshtein(a: string, b: string): number {
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      const del = dp[i - 1]?.[j] ?? 0 + 1;
-      const insert = dp[i]?.[j - 1] ?? 0 + 1;
-      const rep = dp[i - 1]?.[j - 1] ?? 0 + cost;
+      const del = (dp[i - 1]?.[j] ?? 0) + 1;
+      const insert = (dp[i]?.[j - 1] ?? 0) + 1;
+      const rep = (dp[i - 1]?.[j - 1] ?? 0) + cost;
 
       dp[i]![j] = Math.min(
         del, // 刪除

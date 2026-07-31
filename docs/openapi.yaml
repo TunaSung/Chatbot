@@ -151,6 +151,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/SendMessageRes"
 
+  /chat/stream:
+    post:
+      tags: [Chat]
+      summary: Stream a chatbot response using Server-Sent Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageReq"
+      responses:
+        "200":
+          description: SSE events (ready, delta, complete, done, or error)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: delta
+                  data: {"content":"你好"}
+
   /chat/conversations:
     get:
       tags: [Chat]

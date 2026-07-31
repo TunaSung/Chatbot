@@ -1,6 +1,6 @@
 import { useAuth } from "../../../../components/Context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { SlMenu } from "react-icons/sl";
+import { navigate } from "../../../../services/navigation";
 
 type NavbarProps = {
   isBelow768: boolean;
@@ -9,13 +9,12 @@ type NavbarProps = {
 
 function ChatHeader({ isBelow768, setIsAsideOpen }: NavbarProps) {
   const { logout } = useAuth();
-  const navigate = useNavigate();
 
   /**
    * 登出後回到登入頁
    */
-  const handleSignOut = () => {
-    logout();
+  const handleSignOut = async () => {
+    await logout();
     navigate("/", { replace: true });
   };
 

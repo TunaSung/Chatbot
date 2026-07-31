@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch src --exec tsx src/server.ts",
     "start": "node ./dist/server.js",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "test": "node --experimental-strip-types --test test/memory.util.test.ts test/sse.test.ts test/user.util.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,12 +18,11 @@
     "cors": "^2.8.5",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.15.3",
-    "openai": "^6.9.0",
-    "sequelize": "^6.37.7",
-    "uuid": "^13.0.0",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.2",
+    "openai": "^7.2.0",
+    "sequelize": "^6.37.8",
     "zod": "^4.1.12"
   },
   "devDependencies": {

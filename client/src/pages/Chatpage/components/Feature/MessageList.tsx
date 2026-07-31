@@ -16,27 +16,28 @@ import 'ldrs/react/Bouncy.css'
 type MessageListProps = {
   isLoading: boolean;
   messages: Message[];
-  preMessages: Message[];
   conversationId: number | null;
 };
 
 function MessageList({
   isLoading,
   messages,
-  preMessages,
   conversationId,
 }: MessageListProps) {
   const msgContainerRef = useRef<HTMLDivElement>(null);
   const prevConvIdRef = useRef<number | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
-  const displayMessages = isLoading ? preMessages : messages;
+  const isWaitingForFirstToken =
+    isLoading &&
+    messages.at(-1)?.role === "assistant" &&
+    messages.at(-1)?.content.length === 0;
 
   /**
    * 剛進聊天室不 smooth 到底部
    * 點按當前的聊天室不做反應
    * 新訊息來了之後滑到底
-   * TODO 之後可以考慮做成跟 ChatGPT 一樣訊息像是打字出來的一樣，並且慢慢往下滾
+   * SSE delta 更新時會逐步往下滾。
    */
   useEffect(() => {
     const el = msgContainerRef.current;
@@ -101,12 +102,11 @@ function MessageList({
         onScroll={handleScroll}
         className="h-full overflow-y-auto p-4 space-y-3"
       >
-        {displayMessages.map((m) => (
-          <ChatMessage key={m.id} message={m} />
-        ))}
+        {messages.map((m) =>
+          m.content ? <ChatMessage key={m.id} message={m} /> : null
+        )}
 
-        {/* ✅ loading bubble */}
-        {isLoading && (
+        {isWaitingForFirstToken && (
           <span className="flex justify-self-start items-center gap-2 max-w-[70%] px-4 py-2 text-sm sm:text-xl md:text-sm">
             <p className="font-extrabold">
               正在思考中
