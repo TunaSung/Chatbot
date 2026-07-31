@@ -44,5 +44,11 @@ Conversation.init(
     sequelize: sqlize,
     modelName: "conversation",
     tableName: "conversations",
+    indexes: [
+      {
+        name: "conversations_user_updated_at",
+        fields: ["userId", "updatedAt"],
+      },
+    ],
   }
 );

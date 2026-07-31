@@ -5,7 +5,7 @@ import { TbLockPassword } from "react-icons/tb";
 import { toast } from "react-toastify";
 import { signIn } from "../../../services/auth.service";
 import { useAuth } from "../../../components/Context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { navigate } from "../../../services/navigation";
 
 type SignInProps = {
   toggleAuthView: () => void;
@@ -19,7 +19,6 @@ type FormState = {
 function SignIn({ toggleAuthView }: SignInProps) {
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { login } = useAuth();
 
   const onChange = useCallback(
@@ -44,10 +43,10 @@ function SignIn({ toggleAuthView }: SignInProps) {
     try {
       setLoading(true);
       const res = await signIn(email, password);
-      login(res.token, res.refreshToken);
+      await login(res.token, res.refreshToken);
       toast.success("Sign in successful");
       navigate("/chat");
-    } catch (err) {
+    } catch {
       toast.error("Sign in failed");
     } finally {
       setLoading(false);

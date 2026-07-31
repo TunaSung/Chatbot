@@ -12,7 +12,7 @@
 - 使用者登入/登出（JWT）
 - 建立新對話（conversationId 可為 null）
 - 歷史對話列表（依 `updatedAt` 倒序）
-- 訊息送出 UX：使用者訊息立即先顯示 → AI thinking loading → AI 回覆後更新
+- SSE 串流回覆：使用者訊息立即顯示，AI 內容依 token 逐步更新
 - 切換聊天室：首次進入不 smooth、直接定位到底部
 - 上滑後顯示「回到底部」浮動按鈕
 - 編輯對話標題
@@ -27,6 +27,7 @@
 - Backend: Node.js + Express + TypeScript + Sequelize
 - Database: MySQL 8
 - AI: OpenAI Chat Completions API
+- Default model: `gpt-5.6-terra`
 - DevOps: Docker / Docker Compose / Railway
 
 ---
@@ -123,6 +124,7 @@ Auth:
 
 Chat:
 - `POST   /chat`
+- `POST   /chat/stream`（SSE，前端預設使用）
 - `GET    /chat/conversations`
 - `GET    /chat/conversations/:id/messages`
 - `DELETE /chat/conversations/:id/delete`
@@ -147,5 +149,7 @@ OpenAPI/Swagger 規格：`docs/openapi.yaml`
    - `CORS_ORIGINS`
    - `NODE_ENV=production`
 5. Railway 會自動注入 `PORT`，server 讀取後啟動
+6. Server 啟動時會自動執行冪等資料庫 migration，建立查詢索引與
+   `conversation_summaries.conversationId` 唯一約束
 
 ---

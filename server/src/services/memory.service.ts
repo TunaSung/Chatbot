@@ -4,6 +4,7 @@ import {
   isSimilarMemory,
 } from "./utils/memory.util.js";
 import { openai } from "../config/openai.js";
+import { env } from "../config/env.js";
 
 /**
  * 把存起來的長期記憶拿出來
@@ -79,12 +80,11 @@ export async function extractAndSaveMemories(
    * Prompt 丟給 Open ai
    */
   const completion = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL!,
+    model: env.OPENAI_MODEL,
     messages: [
       { role: "system", content: MEMORY_PROMPT },
       { role: "user", content: textBlock },
     ],
-    temperature: 0,
   });
 
   /**

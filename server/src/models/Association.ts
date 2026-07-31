@@ -3,7 +3,6 @@ import { Conversation } from "./Conversation.js";
 import { Message } from "./Message.js";
 import { Memory } from "./Memory.js";
 import { ConversationSummary } from "./ConversationSummary.js";
-import type { CreateOptions } from "sequelize";
 
 /**
  * User
@@ -51,6 +50,7 @@ Conversation.hasOne(ConversationSummary, {
 
 ConversationSummary.belongsTo(Conversation, {
   foreignKey: "conversationId",
+  onDelete: "CASCADE",
 });
 
 /**
@@ -67,24 +67,6 @@ Memory.belongsTo(Message, {
     allowNull: true,
   },
   onDelete: "SET NULL", // 同上
-});
-
-/**
- * sequelize 會自己傳入該筆 msg
- */
-Message.afterCreate(async (msg: Message, options: CreateOptions) => {
-  const convId = msg.conversationId;
-  if (!convId) return;
-
-  const conv = await Conversation.findByPk(convId, {
-    transaction: options.transaction ?? null,
-  });
-  if (!conv) {
-    return;
-  }
-
-  conv.changed("updatedAt", true);
-  await conv.save({ transaction: options.transaction ?? null });
 });
 
 export { User, Conversation, Message, Memory, ConversationSummary };

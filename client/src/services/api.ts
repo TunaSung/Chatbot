@@ -2,16 +2,17 @@ import axios, { AxiosError,type  AxiosRequestConfig } from "axios";
 import { getAccessToken, getRefreshToken, saveTokenToStorage, clearTokenFromStorage } from "./token";
 
 const Base = import.meta.env.VITE_API_URL || "";
+export const API_BASE_URL = `${Base}/api`;
 
 // 有 auth header 的一般 API
 const api = axios.create({
-  baseURL: Base + "/api",
+  baseURL: API_BASE_URL,
   withCredentials: false,
 });
 
 // 不帶 auth header 的 API（專門拿來 refresh/logout）
 export const apiNoAuth = axios.create({
-  baseURL: Base + "/api",
+  baseURL: API_BASE_URL,
   withCredentials: false,
 });
 
@@ -31,17 +32,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// refresh single-flight queues
-let isRefreshing = false;
-let refreshSubscribers: Array<(token: string) => void> = [];
-
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb);
-}
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+let refreshPromise: Promise<string> | null = null;
 
 async function requestRefreshToken() {
   const rt = getRefreshToken();
@@ -51,6 +42,27 @@ async function requestRefreshToken() {
   // backend 回 { message, token, refreshToken, user }
   const { token, refreshToken } = res.data as { token: string; refreshToken: string };
   return { token, refreshToken };
+}
+
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = requestRefreshToken()
+      .then(({ token, refreshToken }) => {
+        saveTokenToStorage(token, refreshToken);
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        return token;
+      })
+      .catch((error) => {
+        clearTokenFromStorage();
+        delete api.defaults.headers.common["Authorization"];
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
 }
 
 // response interceptor：401 自動續期
@@ -72,27 +84,8 @@ api.interceptors.response.use(
 
     original._retry = true;
 
-    // 如果正在 refresh，排隊等新 token
-    if (isRefreshing) {
-      return new Promise((resolve) => {
-        subscribeTokenRefresh((newToken) => {
-          original.headers = original.headers ?? {};
-          original.headers.Authorization = `Bearer ${newToken}`;
-          resolve(api(original));
-        });
-      });
-    }
-
-    isRefreshing = true;
-
     try {
-      const { token: newToken, refreshToken: newRT } = await requestRefreshToken();
-
-      // 更新 storage + axios header
-      saveTokenToStorage(newToken, newRT);
-      api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-
-      onRefreshed(newToken);
+      const newToken = await refreshAccessToken();
 
       original.headers = original.headers ?? {};
       original.headers.Authorization = `Bearer ${newToken}`;
@@ -103,8 +96,6 @@ api.interceptors.response.use(
       clearTokenFromStorage();
       delete api.defaults.headers.common["Authorization"];
       return Promise.reject(refreshErr);
-    } finally {
-      isRefreshing = false;
     }
   }
 );

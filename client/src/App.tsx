@@ -1,20 +1,19 @@
 import "./App.css";
 import { lazy, Suspense } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { Spiral } from "ldrs/react";
 import "ldrs/react/Spiral.css";
+import { usePathname } from "./services/navigation";
 
 const ChatPage = lazy(() => import("./pages/Chatpage/Chatpage"))
 const Sign = lazy(() => import("./pages/Sign/Sign"))
 
 function App() {
+  const pathname = usePathname();
+  const Page = pathname === "/chat" ? ChatPage : Sign;
+
   return (
-    <Router>
+    <>
       <ToastContainer position="top-right" autoClose={3000} />
       <Suspense
         fallback={
@@ -23,12 +22,9 @@ function App() {
           </div>
         }
       >
-        <Routes>
-          <Route path="/" element={<Sign />} />
-          <Route path="/chat" element={<ChatPage />} />
-        </Routes>
+        <Page />
       </Suspense>
-    </Router>
+    </>
   );
 }
 

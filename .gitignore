@@ -5,6 +5,7 @@ server/node_modules/
 dist/
 client/dist/
 server/dist/
+*.tsbuildinfo
 
 # ==== dotenv / secrets ====
 .env
@@ -24,3 +25,4 @@ Thumbs.db
 .vscode/
 .idea/
 .sql
+*.http

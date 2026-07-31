@@ -62,11 +62,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const logout = useCallback(async () => {
-    // 通知後端失效 refresh token
-    await logoutRemote();
-    clearToken();
-    setIsAuthenticated(false);
-    setConv([]);
+    try {
+      // 通知後端失效 refresh token
+      await logoutRemote();
+    } finally {
+      clearToken();
+      setIsAuthenticated(false);
+      setConv([]);
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -83,6 +86,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Provider 與 hook 維持同一模組，讓所有呼叫端共用同一個 context instance。
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

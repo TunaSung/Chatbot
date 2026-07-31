@@ -63,7 +63,7 @@ function SignUp({ toggleAuthView }: SignUpProps) {
       // 清表單並切回登入畫面
       setForm({ username: "", email: "", password: "", confirm: "" });
       toggleAuthView();
-    } catch (err) {
+    } catch {
       toast.error("Sign up failed");
     } finally {
       setLoading(false);

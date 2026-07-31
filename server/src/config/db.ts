@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
-import "dotenv/config";
+import { env } from "./env.js";
 
-export const sqlize = new Sequelize(process.env.MYSQL_URL!, {
+export const sqlize = new Sequelize(env.MYSQL_URL, {
   dialect: "mysql",
   logging: false,
   dialectOptions: { charset: "utf8mb4" },

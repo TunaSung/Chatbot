@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { sendMessage, getMessages } from "../../services/chat.service";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { streamMessage, getMessages } from "../../services/chat.service";
 import type { Message } from "../../types/chat.type";
 import { useAuth } from "../../components/Context/AuthContext";
 import ConversationList from "./components/Feature/ConversationList";
@@ -10,36 +10,48 @@ import { useMediaQuery } from "react-responsive";
 import { toast } from 'react-toastify'
 
 function ChatPage() {
-  const { isAuthenticated, conv: conversations, refreshConvs } = useAuth();
+  const { conv: conversations, refreshConvs } = useAuth();
 
   const [currentConvId, setCurrentConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [preMsg, setPreMsg] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAsideOpen, setIsAsideOpen] = useState(false);
+  const streamAbortRef = useRef<AbortController | null>(null);
+  const skipNextConversationFetchRef = useRef(false);
 
   const isBelow768 = useMediaQuery({ maxWidth: 767 });
+  const actualAsideOpen = !isBelow768 || isAsideOpen;
 
   // 選擇聊天室時載入訊息
   useEffect(() => {
     if (!currentConvId) return;
+    if (skipNextConversationFetchRef.current) {
+      skipNextConversationFetchRef.current = false;
+      return;
+    }
+
     setLoading(true);
-    setPreMsg([]);
     setError(null);
 
+    let active = true;
     const getMsg = async () => {
       try {
         const res = await getMessages(currentConvId);
-        setMessages(res.messages);
+        if (active) setMessages(res.messages);
       } catch (error) {
-        setError(error instanceof Error ? error.message : "Fetch messages failed");
+        if (active) {
+          setError(error instanceof Error ? error.message : "Fetch messages failed");
+        }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
-    getMsg();
+    void getMsg();
+    return () => {
+      active = false;
+    };
   }, [currentConvId]);
 
 
@@ -51,24 +63,26 @@ function ChatPage() {
 
   // 換聊天室換 id 跟清空 msg
   const handleSelectConversation = useCallback((id: number) => {
+    streamAbortRef.current?.abort();
+    streamAbortRef.current = null;
     setCurrentConvId(id);
     setMessages([]);
-    setPreMsg([]);
-    isBelow768 ? setIsAsideOpen(false) : null;
+    if (isBelow768) setIsAsideOpen(false);
   }, [isBelow768]);
 
   // 新聊天室 id 丟 null 去後端才開新聊天室
   const handleNewChat = useCallback(() => {
+    streamAbortRef.current?.abort();
+    streamAbortRef.current = null;
     setCurrentConvId(null);
     setMessages([]);
-    setPreMsg([]);
-    isBelow768 ? setIsAsideOpen(false) : null;
+    setLoading(false);
+    if (isBelow768) setIsAsideOpen(false);
   }, [isBelow768]);
 
   /**
    * 傳訊息
-   * 把訊息分成後端抓的 message 跟「複製 message + 最新訊息」的 preMsg
-   * AI 還在思考的時候就先呈現 preMsg
+   * 先顯示使用者訊息與空的助理訊息，再把 SSE delta 依序附加到助理訊息。
    */
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -79,40 +93,92 @@ function ChatPage() {
     setInput("");
 
     const tempId = -Date.now();
+    const tempAssistantId = tempId - 1;
+    const now = new Date().toISOString();
     const tempUserMsg: Message = {
       id: tempId,
       conversationId: currentConvId ?? -1,
       role: "user",
       content: text,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    const tempAssistantMsg: Message = {
+      id: tempAssistantId,
+      conversationId: currentConvId ?? -1,
+      role: "assistant",
+      content: "",
+      createdAt: now,
+      updatedAt: now,
     };
 
-    setPreMsg((prev) => {
-      const base = prev.length ? prev : messages;
-      return [...base, tempUserMsg];
-    });
+    setMessages((prev) => [...prev, tempUserMsg, tempAssistantMsg]);
+    const abortController = new AbortController();
+    streamAbortRef.current = abortController;
+    let conversationReady = false;
 
     try {
-      const res = await sendMessage(text, currentConvId ?? undefined);
+      await streamMessage(
+        text,
+        currentConvId ?? undefined,
+        {
+          onReady: (conversationId, userMessage) => {
+            conversationReady = true;
+            if (currentConvId !== conversationId) {
+              skipNextConversationFetchRef.current = true;
+            }
+            setCurrentConvId(conversationId);
+            setMessages((prev) =>
+              prev.map((item) => {
+                if (item.id === tempId) return userMessage;
+                if (item.id === tempAssistantId) {
+                  return { ...item, conversationId };
+                }
+                return item;
+              })
+            );
+          },
+          onDelta: (content) => {
+            setMessages((prev) =>
+              prev.map((item) =>
+                item.id === tempAssistantId
+                  ? { ...item, content: item.content + content }
+                  : item
+              )
+            );
+          },
+          onComplete: (assistantMessage) => {
+            setMessages((prev) =>
+              prev.map((item) =>
+                item.id === tempAssistantId ? assistantMessage : item
+              )
+            );
+          },
+        },
+        abortController.signal
+      );
 
-      const { conversationId, messages: newMessages } = res.result;
-
-      setCurrentConvId(conversationId);
-      setMessages((prev) => [...prev, ...newMessages]);
-
-      await refreshConvs();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Send failed");
+      if (!abortController.signal.aborted) {
+        setMessages((prev) =>
+          prev.filter((item) => item.id !== tempAssistantId)
+        );
+        setError(err instanceof Error ? err.message : "Send failed");
+      }
     } finally {
-      setLoading(false);
-      setPreMsg([]);
+      if (streamAbortRef.current === abortController) {
+        streamAbortRef.current = null;
+        setLoading(false);
+      }
+      if (conversationReady) await refreshConvs();
     }
-  }, [input, currentConvId, loading, messages, isAuthenticated, refreshConvs]);
+  }, [input, currentConvId, loading, refreshConvs]);
 
   useEffect(() => {
-    !isBelow768 ? setIsAsideOpen(true) : setIsAsideOpen(false);
-  }, [isBelow768]);
+    return () => {
+      streamAbortRef.current?.abort();
+    };
+  }, []);
 
   return (
     <div className="h-screen flex bg-slate-50 overflow-hidden">
@@ -123,7 +189,7 @@ function ChatPage() {
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
         isBelow768={isBelow768}
-        isOpen={isAsideOpen}
+        isOpen={actualAsideOpen}
         setIsOpen={setIsAsideOpen}
       />
       {/* 對話列表 end */}
@@ -131,7 +197,7 @@ function ChatPage() {
       {/* 聊天室 start */}
       <main
         className={`flex-1 flex flex-col min-h-0 ${
-          isBelow768 && isAsideOpen ? "opacity-50" : ""
+          isBelow768 && actualAsideOpen ? "opacity-50" : ""
         }`}
       >
         <ChatHeader isBelow768={isBelow768} setIsAsideOpen={setIsAsideOpen} />
@@ -139,7 +205,6 @@ function ChatPage() {
           <MessageList
             isLoading={loading}
             messages={messages}
-            preMessages={preMsg}
             conversationId={currentConvId}
           />
           <ChatInput
